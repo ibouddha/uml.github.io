@@ -1,48 +1,46 @@
-# Importations
-from flask import Flask, render_template, redirect, url_for, request
-from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from flask import Flask, render_template, request, redirect
+import mysql.connector
 
-# Configuration de l'application Flask
+
+
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'votre_clé_secrèt  e'  # Remplacez par votre propre clé secrète
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///todo.db'  # Utilisation de SQLite comme base de données
-db = SQLAlchemy(app)
 
-# Modèle de données
-class Task(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    content = db.Column(db.String(200), nullable=False)
-    date_created = db.Column(db.DateTime, default=datetime.utcnow)
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    mydb = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="",
+        database="tache"
+    )
 
-# Formulaire pour ajouter une tâche
-class TaskForm(FlaskForm):
-    content = StringField('Tâche', validators=[DataRequired()])
+    mycursor = mydb.cursor()
 
-# Route pour afficher la liste des tâches
-@app.route('/')
-def tasks():
-    tasks = Task.query.all()
-    return render_template('tasks.html', tasks=tasks)
+    mycursor.execute("SELECT * FROM tache")
 
-# Route pour ajouter une tâche
-@app.route('/add_task', methods=['POST'])
-def add_task():
-    form = TaskForm()
-    if form.validate_on_submit():
-        new_task = Task(content=form.content.data)
-        db.session.add(new_task)
-        db.session.commit()
-    return redirect(url_for('tasks'))
+    results = mycursor.fetchall()
 
-# Route pour supprimer une tâche
-@app.route('/delete_task/<int:id>', methods=['POST'])
-def delete_task(id):
-    task_to_delete = Task.query.get_or_404(id)
-    db.session.delete(task_to_delete)
-    db.session.commit()
-    return redirect(url_for('tasks'))
+    return render_template('index.html', tasks=results)
+
+@app.route('/delete/<int:task_id>', methods=['GET'])
+def delete_task(task_id):
+    conn = mysql.connect
+    cur = conn.cursor()
+    cur.execute("DELETE FROM tache WHERE id = %s", [task_id])
+    conn.commit()
+    cur.close()
+
+    return redirect(url_for('index'))
+
+@app.route('/complete/<int:task_id>', methods=['GET'])
+def complete_task(task_id):
+    conn = mysql.connect
+    cur = conn.cursor()
+    cur.execute("UPDATE tache SET completed = NOT completed WHERE id = %s", [task_id])
+    conn.commit()
+    cur.close()
+
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    db.create_all()
     app.run(debug=True)
