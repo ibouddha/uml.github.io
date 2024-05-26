@@ -1,0 +1,116 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(to bottom, #f2f2f2 0%, #e0e0e0 100%);
+}
+
+.container {
+    position: relative;
+    width: 400px;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    animation: moveInUp 0.5s ease-in-out forwards;
+}
+
+.container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.toggle-button {
+    background-color: #fff;
+    color: #333;
+    padding: 10px 20px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.toggle-button.active {
+    background-color: #337ab7;
+    color: #fff;
+}
+
+.hidden {
+    display: none;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+form label {
+    margin-bottom: 5px;
+    color: #333;
+}
+
+form input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    margin-bottom: 15px;
+    transition: border-color 0.2s ease-in-out;
+}
+
+form input:hover {
+    border-color: #888;
+}
+
+form button {
+    background-color: #337ab7;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    transition:moveInUp;
+}
+
+
+form button:hover {
+    background-color: #286090;
+}
+
+/* Animations */
+@keyframes moveInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.toggle-button.active::after {
+  content: "";
+  display: block;
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 3px;
+  background-color: #337ab7; /* Adjust based on active button color */
+  transition: transform 0.2s ease-in-out;
+}
+
+.toggle-button:hover::after {
+  transform: translateX(-50%) scaleX(1.1);
+}

@@ -1,46 +1,63 @@
 from flask import Flask, render_template, request, redirect
-import mysql.connector
-
-
+import models
+from random import randrange
+ 
+# from flask_mysqldb import MySQL
 
 app = Flask(__name__)
 
-@app.route('/', methods=['GET', 'POST'])
+
+
+@app.route('/')
 def index():
-    mydb = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="",
-        database="tache"
-    )
+    return render_template('login.html')
 
-    mycursor = mydb.cursor()
+@app.route('/login',methods=['GET','POST'])
+def login():
+    name = request.form['nom']
+    username = request.form['username']
+    password = request.form['password']
+    account = models.authenticate(username,password)
+    if account:
+        models.authentified(account[1])
+        return render_template('index.html',user= account)
+    else:
+        return redirect('/')
+    
 
-    mycursor.execute("SELECT * FROM tache")
+@app.route('/register',methods=['GET','POST'])
+def    
 
-    results = mycursor.fetchall()
+    
+@app.route('/list', methods=['GET', 'POST'])
+def display():
+    if models.authenticate(request.form['username'],request.form['password']):
+        results = models.getAllTask()
+        return render_template('index.html', tasks=results)
+    else:
+        return redirect('/')
 
-    return render_template('index.html', tasks=results)
+@app.route('/add-task',methods=['GET','POST'])
+def add():
+    idtask = 0
+    if request.method == 'POST':
+        idtask = randrange(10000000)
+        title = request.form.get('titre')
+        descript = request.form.get('description')
+        etat = request.form.get('state')
+        models.addTask(idtask,title,descript,etat)
+        return redirect('/list')
+    
 
 @app.route('/delete/<int:task_id>', methods=['GET'])
 def delete_task(task_id):
-    conn = mysql.connect
-    cur = conn.cursor()
-    cur.execute("DELETE FROM tache WHERE id = %s", [task_id])
-    conn.commit()
-    cur.close()
-
-    return redirect(url_for('index'))
+    models.deleteTask([task_id])
+    return redirect('/list')
 
 @app.route('/complete/<int:task_id>', methods=['GET'])
 def complete_task(task_id):
-    conn = mysql.connect
-    cur = conn.cursor()
-    cur.execute("UPDATE tache SET completed = NOT completed WHERE id = %s", [task_id])
-    conn.commit()
-    cur.close()
-
-    return redirect(url_for('index'))
+    models.markdone([task_id])
+    return redirect('/list')
 
 if __name__ == '__main__':
     app.run(debug=True)

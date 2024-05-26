@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Minimalist Login</title>
+    <link
+      rel="stylesheet"
+      href="{{url_for('static',filename='css/login.css')}}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="tabs">
+        <button class="toggle-button active" data-target="login">Login</button>
+        <button class="toggle-button" data-target="signup">Sign Up</button>
+      </div>
+      <form id="login" action="/login" method="POST">
+        <h2>Login</h2>
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required />
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required />
+        <button type="submit">Login</button>
+      </form>
+      <form id="signup" action="#" method="post" class="hidden">
+        <h2>Sign Up</h2>
+        <label for="Nom">Nom:</label>
+        <input
+          type="text"
+          id="nom"
+          name="nom"
+          required
+        />
+        <label for="email">Username</label>
+        <input type="text" id="username" name="username" required />
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required />
+        <label for="confirmPassword">Confirm Password</label>
+        <input
+          type="password"
+          id="confirmPassword"
+          name="confirmPassword"
+          required
+        />
+        <button type="submit">Sign Up</button>
+      </form>
+    </div>
+  </body>
+  <script>
+    const toggleButtons = document.querySelectorAll(".toggle-button");
+    const forms = document.querySelectorAll("form");
+
+    toggleButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        // Remove active class from all toggle buttons
+        toggleButtons.forEach((b) => b.classList.remove("active"));
+        // Add active class to the clicked button
+        button.classList.add("active");
+
+        // Show/hide forms based on button target
+        const targetFormId = button.dataset.target;
+        forms.forEach((form) => {
+          if (form.id === targetFormId) {
+            form.classList.remove("hidden");
+          } else {
+            form.classList.add("hidden");
+          }
+        });
+      });
+    });
+  </script>
+</html>
