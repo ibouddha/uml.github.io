@@ -1,4 +1,5 @@
 import mysql.connector
+from flask import session
 
 mydb = mysql.connector.connect(
         host="localhost",
@@ -9,46 +10,61 @@ mydb = mysql.connector.connect(
 
 def authenticate(username, password):
     cursor = mydb.cursor()
-    cursor.execute("SELECT * FROM users WHERE usename = %s AND password = %s and status = %s", (username, password,'online'))
+    cursor.execute("SELECT * FROM users WHERE username = %s AND password = %s and status = %s", (username, password,'online'))
     account = cursor.fetchone()
     if account:
         return account
     else:
         return False
     
-def register(username,password,name):
+def register(name,username,password):
     cursor = mydb.cursor()
-    cursor.ecxecute("insert into users values (%s,%s,%s,%s)",(name,username,password,'offline'))
-    cursor.commit()
+    cursor.execute("insert into users values (%s,%s,%s,%s)",(name,username,password,'offline'))
+    mydb.commit()
 
 def authentified(username):
     cursor = mydb.cursor()
-    cursor.execute("UPDATE users set status = 'online' where username = %s",(username))
-    cursor.commit()
+    cursor.execute("UPDATE users set status = %s where username = %s",('online',username))
+    mydb.commit()
     
-def logout(usename):
+def isconnected(username):
     cursor = mydb.cursor()
-    cursor.execute("UPDATE users set status = 'offline' where username = %s",(username))
-    cursor.commit()
+    cursor.execute("select status from users where username = %s",(username,))
+    status = cursor.fetchone()
+    if(status == 'online'):
+        return True
+    else:
+        return False
 
-def getAllTask():
+def logout(username):
+    cursor = mydb.cursor()
+    cursor.execute("UPDATE users set status = %s where username = %s",('offline',username))
+    mydb.commit()
+
+def getAllTasks():
     mycursor = mydb.cursor()
-    mycursor.execute("SELECT * FROM task where state != 'archived'")
+    mycursor.execute("SELECT * FROM task where state != %s and username = %s",('archived',session['username']))
     results = mycursor.fetchall()
     return results
 
-def getTaskById(id):
+def getAllDoneTask():
     mycursor = mydb.cursor()
-    mycursor.execute("SELECT * FROM task where id = %s", (id,))
-    result = mycursor.fetchone()
+    mycursor.execute("SELECT * FROM task where username = %s",(session['username'],))
+    results = mycursor.fetchall()
+    return results
+
+def getTaskByTitle(title):
+    mycursor = mydb.cursor()
+    mycursor.execute("SELECT * FROM task where id = %s and username = %s", (title,session['username']))
+    result = mycursor.fetchall()
     if result :
         return result
     else:
         return "id incorrect"
     
-def addTask(idtask,title,descript,etat):
+def addTask(idtask,title,descript,etat,username):
     mycursor = mydb.cursor()
-    mycursor.execute("INSERT INTO task (idtask,titre,description,state) VALUES (%s,%s,%s,%s)", (idtask,title,descript,etat))
+    mycursor.execute("INSERT INTO task (idtask,titre,description,state,username) VALUES (%s,%s,%s,%s,%s)", (idtask,title,descript,etat,username))
     mydb.commit()
     
 def deleteTask(task_id):
@@ -58,5 +74,5 @@ def deleteTask(task_id):
     
 def markdone(task_id):
     cur = mydb.cursor()
-    cur.execute("UPDATE task SET state = 'completed' WHERE idtask = %s", task_id)
+    cur.execute("UPDATE task SET state = 'completed' WHERE idtask = %s",task_id)
     mydb.commit()

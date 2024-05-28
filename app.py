@@ -1,10 +1,12 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, session, render_template, request, redirect
 import models
 from random import randrange
  
 # from flask_mysqldb import MySQL
 
 app = Flask(__name__)
+
+app.secret_key = "IamBouddh@"
 
 
 
@@ -14,25 +16,47 @@ def index():
 
 @app.route('/login',methods=['GET','POST'])
 def login():
-    name = request.form['nom']
-    username = request.form['username']
-    password = request.form['password']
-    account = models.authenticate(username,password)
-    if account:
-        models.authentified(account[1])
-        return render_template('index.html',user= account)
+    username = request.form.get('username')
+    password = request.form.get('password')
+    if(not models.isconnected(username) and ('username' not in session)):
+        models.authentified(username)
+        account = models.authenticate(username,password)
+        print(account)
+        if account:
+            session['username'] = username
+            return redirect('/list')
     else:
         return redirect('/')
     
+@app.route('/logout',methods=('POST','GET'))
+def logout():
+    if('username' in session):
+        models.logout(session['username'])
+        session.pop('username',None)
+    return redirect('/')
+    
 
 @app.route('/register',methods=['GET','POST'])
-def    
+def register():
+    name = request.form.get('nom')
+    username = request.form.get('username')
+    password = request.form.get('password')
+    models.register(name,username,password)
+    return redirect('/')
 
     
-@app.route('/list', methods=['GET', 'POST'])
+@app.route('/list')
 def display():
-    if models.authenticate(request.form['username'],request.form['password']):
-        results = models.getAllTask()
+    results = models.getAllTasks()
+    if('username' in session):
+        return render_template('index.html', tasks=results)
+    else:
+        return redirect('/')
+    
+@app.route('/all')
+def getAll():
+    results = models.getAllDoneTask()
+    if('username' in session):
         return render_template('index.html', tasks=results)
     else:
         return redirect('/')
@@ -40,13 +64,16 @@ def display():
 @app.route('/add-task',methods=['GET','POST'])
 def add():
     idtask = 0
+    username = session['username']
     if request.method == 'POST':
         idtask = randrange(10000000)
         title = request.form.get('titre')
         descript = request.form.get('description')
         etat = request.form.get('state')
-        models.addTask(idtask,title,descript,etat)
+        models.addTask(idtask,title,descript,etat,username)
         return redirect('/list')
+    else:
+        return redirect('/')
     
 
 @app.route('/delete/<int:task_id>', methods=['GET'])

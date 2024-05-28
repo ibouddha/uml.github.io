@@ -3,6 +3,7 @@ body {
     background-color: #f0f0f0;
     margin: 0;
     padding: 0;
+    display: block;
 }
 
 h1 {
@@ -14,14 +15,31 @@ h1 {
 .nav{
     display: flex;
     width: 98vw;
+    height: 5vh;
+    border: 1px solid black;
+    margin: auto;
+    margin-top: 2vh;
 }
 
-.nav .profile{
-    margin: 80vw;
+.profile{
+    margin-left: 80vw;
     font-size: large;
     font-weight: bold;
     color: #333;
     text-align: center;
+    padding-top: 1vh;
+}
+
+ul{
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+}
+
+.nav li{
+    margin-right: 2vw;
 }
 
 #add-task-form {

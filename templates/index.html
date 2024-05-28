@@ -8,7 +8,13 @@
 <body>
     <div class="nav">
         <div class="logo"><img src="" alt=""></div>
-        <div class="profile">{%user[1]%}</div>
+        <div class="profile">
+            <ul>
+                <li><a href="/all">Voir tout</a></li>
+                <li>{{session['username']}}</li>
+                <li><a href="/logout">Logout</a></li>
+            </ul>
+        </div>
     </div>
     <div class="main">
         <h1>Task Manager</h1>
@@ -16,10 +22,7 @@
         <form id="add-task-form" method="POST" action="/add-task">
             <input type="text" id="titre" name="titre" placeholder="Title" required>
             <input type="text" id="description" name="description" placeholder="Description" required>
-            <select id="state" name="state">
-                <option value="pending">Pending</option>
-                <option value="completed">Completed</option>
-            </select>
+            <input type="text" name="state" id="state" value="pending">
             <button type="submit">Add Task</button>
         </form>
 
