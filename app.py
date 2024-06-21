@@ -1,4 +1,4 @@
-from flask import Flask, session, render_template, request, redirect
+from flask import Flask, session, render_template, request, redirect, jsonify
 import models
 from random import randrange
  
@@ -12,21 +12,30 @@ app.secret_key = "IamBouddh@"
 
 @app.route('/')
 def index():
-    return render_template('login.html')
+    if('username' in session):
+        return redirect('/list')
+    else:
+        return render_template('login.html')
 
 @app.route('/login',methods=['GET','POST'])
 def login():
-    username = request.form.get('username')
-    password = request.form.get('password')
-    if(not models.isconnected(username) and ('username' not in session)):
-        models.authentified(username)
-        account = models.authenticate(username,password)
-        print(account)
-        if account:
-            session['username'] = username
-            return redirect('/list')
+    if('username' in session):
+        return redirect('/list')
     else:
-        return redirect('/')
+        username = request.form.get('username')
+        password = request.form.get('password')
+        if(not models.isconnected(username) and ('username' not in session)):
+            models.authentified(username)
+            account = models.authenticate(username,password)
+            # print(account)
+            if account:
+                # print(account)
+                session['username'] = username
+                session['userId'] = account[0]
+                # print(session['userId'])
+                return redirect('/list')
+        else:
+            return redirect('/')
     
 @app.route('/logout',methods=('POST','GET'))
 def logout():
@@ -47,33 +56,56 @@ def register():
     
 @app.route('/list')
 def display():
-    results = models.getAllTasks()
     if('username' in session):
-        return render_template('index.html', tasks=results)
+        results = models.getAllTasks()
+        if('userId' in session):
+            return render_template('index.html', tasks=results)
+        else:
+            return redirect('/')
     else:
-        return redirect('/')
+        return redirect('/logout')
     
 @app.route('/all')
 def getAll():
     results = models.getAllDoneTask()
-    if('username' in session):
+    if('userId' in session):
         return render_template('index.html', tasks=results)
     else:
         return redirect('/')
 
 @app.route('/add-task',methods=['GET','POST'])
 def add():
-    idtask = 0
-    username = session['username']
+    userId = session['userId']
     if request.method == 'POST':
-        idtask = randrange(10000000)
         title = request.form.get('titre')
         descript = request.form.get('description')
         etat = request.form.get('state')
-        models.addTask(idtask,title,descript,etat,username)
+        models.addTask(title,descript,etat,userId)
         return redirect('/list')
     else:
         return redirect('/')
+    
+@app.route("/process", methods=['POST'])
+def treatment():
+    data = request.get_json()
+    donnée = []
+    json_data = data['data']
+    number = len(models.getAllDoneTask())
+    print(data['size'])
+    if(data['size']>number):
+        size = data['size']-number
+        for index in range(0,size):
+            # print(datum,end='\n')
+            while(models.addjsonTask(json_data[index]) != 'done'):
+                index+=1
+                size+=1
+    else:
+        print(number)
+        for index in range(0,number):
+            models.addjsonTask(json_data[index])
+            donnée.append(json_data[index])
+    return donnée
+            
     
 
 @app.route('/delete/<int:task_id>', methods=['GET'])

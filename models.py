@@ -1,5 +1,6 @@
 import mysql.connector
 from flask import session
+from faker import Faker
 
 mydb = mysql.connector.connect(
         host="localhost",
@@ -17,10 +18,27 @@ def authenticate(username, password):
     else:
         return False
     
+def getId():
+    cursor = mydb.cursor()
+    cursor.execute("SELECT * FROM users")
+    ids = len(cursor.fetchall())
+    return ids
+    
 def register(name,username,password):
     cursor = mydb.cursor()
-    cursor.execute("insert into users values (%s,%s,%s,%s)",(name,username,password,'offline'))
+    idtask = getId()+1
+    cursor.execute("insert into users values (%s,%s,%s,%s,%s)",(idtask,name,username,password,'offline'))
     mydb.commit()
+
+def titleExist(title):
+    try:
+        cursor = mydb.cursor()
+        cursor.execute("SELECT * FROM task where titre = %s",(title,))
+        titles = cursor.fetchone()
+        return titles is not None
+    except Exception as e:
+        print(f"error from checking existence {e}")
+        return False
 
 def authentified(username):
     cursor = mydb.cursor()
@@ -36,35 +54,35 @@ def isconnected(username):
     else:
         return False
 
-def logout(username):
+def logout(userId):
     cursor = mydb.cursor()
-    cursor.execute("UPDATE users set status = %s where username = %s",('offline',username))
+    cursor.execute("UPDATE users set status = %s where userId = %s",('offline',userId))
     mydb.commit()
 
 def getAllTasks():
     mycursor = mydb.cursor()
-    mycursor.execute("SELECT * FROM task where state != %s and username = %s",('archived',session['username']))
+    mycursor.execute("SELECT * FROM task where state != %s and userId = %s",('archived',session['userId']))
     results = mycursor.fetchall()
     return results
 
 def getAllDoneTask():
     mycursor = mydb.cursor()
-    mycursor.execute("SELECT * FROM task where username = %s",(session['username'],))
+    mycursor.execute("SELECT * FROM task where userId = %s",(session['userId'],))
     results = mycursor.fetchall()
     return results
 
 def getTaskByTitle(title):
     mycursor = mydb.cursor()
-    mycursor.execute("SELECT * FROM task where id = %s and username = %s", (title,session['username']))
+    mycursor.execute("SELECT * FROM task where id = %s and userId = %s", (title,session['userId']))
     result = mycursor.fetchall()
     if result :
         return result
     else:
         return "id incorrect"
     
-def addTask(idtask,title,descript,etat,username):
+def addTask(title,descript,etat,userId):
     mycursor = mydb.cursor()
-    mycursor.execute("INSERT INTO task (idtask,titre,description,state,username) VALUES (%s,%s,%s,%s,%s)", (idtask,title,descript,etat,username))
+    mycursor.execute("INSERT INTO task (titre,description,state,userId) VALUES (%s,%s,%s,%s)", (title,descript,etat,userId))
     mydb.commit()
     
 def deleteTask(task_id):
@@ -76,3 +94,41 @@ def markdone(task_id):
     cur = mydb.cursor()
     cur.execute("UPDATE task SET state = 'completed' WHERE idtask = %s",task_id)
     mydb.commit()
+    
+def checkId(id,userId):
+    cur = mydb.cursor()
+    cur.execute("SELECT * FROM task WHERE idtask = %s and userId = %s",(id,userId))
+    result = cur.fetchone()
+    if result:
+        return True
+    else:
+        return False
+    
+def addjsonTask(data):
+    faker = Faker()
+    userId      =   data['userId']
+    idtask      =   data['id']
+    title       =   data['title']
+    description =   faker.text()
+    if(data['completed']):
+        state = 'completed'
+    else:
+        state = 'todo'
+    mycursor = mydb.cursor()
+    print(title)
+    if(titleExist(title)):
+        print("title already exist")
+        return 'blocked'
+    else:
+        # print(title)
+        if(not checkId(idtask,userId)):
+            mycursor.execute("INSERT INTO task (titre,description,state,userId) VALUES (%s,%s,%s,%s)",(title,description,state,userId))
+        else:
+            idtask = len(getAllDoneTask())+1
+            print(idtask)
+            mycursor.execute("INSERT INTO task (titre,description,state,userId) VALUES (%s,%s,%s,%s)",(title,description,state,userId))
+        mydb.commit()
+        return 'done'
+    
+        
+    # print(title)
